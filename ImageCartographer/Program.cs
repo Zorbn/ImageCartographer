@@ -93,7 +93,7 @@ int CeilToPowerOfTwo(int x)
 
     if (images.Length == 0) return (destinations, dimensions);
 
-    dimensions.Y = CeilToPowerOfTwo(images[0].Height);
+    dimensions.Y = CeilToPowerOfTwo(PadSize(images[0].Height));
 
     FindDestinationsFromStart(Point.Empty, int.MaxValue, images, destinations, ref dimensions);
 
@@ -210,21 +210,17 @@ void GenerateAtlasInfo(string path, Image<Rgba32>[] images, string[] imageNames,
     }
 }
 
-void Main()
+void HandleDirectory(string directory)
 {
-    Console.WriteLine("Starting to draw...");
-
-    var directory = args.Length < 1 ? Directory.GetCurrentDirectory() : args[0];
     var (images, imageNames) = LoadImages(directory);
 
     if (images.Length < 1)
     {
-        Console.WriteLine("This directory contains no images!");
+        Console.WriteLine($"{directory} contains no images!");
         return;
     }
 
     var stopwatch = new Stopwatch();
-    stopwatch.Start();
 
     SortImages(images, imageNames);
     var (destinations, dimensions) = FindDestinations(images);
@@ -236,8 +232,27 @@ void Main()
 
     GenerateAtlasInfo(Path.Join(directory, outputInfoName), images, imageNames, destinations);
 
-    Console.WriteLine($"Created an atlas with the dimensions {dimensions.X}x{dimensions.Y} out of {images.Length} images in {stopwatch.ElapsedMilliseconds}ms!\n" +
+    Console.WriteLine($"Created an atlas with the dimensions {dimensions.X}x{dimensions.Y} out of {images.Length} images from {directory} in {stopwatch.ElapsedMilliseconds}ms!\n" +
                       $"Generated {outputName}, and {outputInfoName} with the format \"name{infoSeparator}x{infoSeparator}y{infoSeparator}width{infoSeparator}height\".");
+
+    Directory.GetDirectories(directory).ForEach(HandleDirectory);
+}
+
+void Main()
+{
+    Console.WriteLine("Starting to draw...");
+
+    var directory = args.Length < 1 ? Directory.GetCurrentDirectory() : args[0];
+    HandleDirectory(directory);
 }
 
 Main();
+
+internal static class ArrayExtensions
+{
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void ForEach<T>(this T[] array, Action<T> action)
+    {
+        Array.ForEach(array, action);
+    }
+}
