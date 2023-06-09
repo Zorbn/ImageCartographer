@@ -221,6 +221,7 @@ void HandleDirectory(string directory)
     }
 
     var stopwatch = new Stopwatch();
+    stopwatch.Start();
 
     SortImages(images, imageNames);
     var (destinations, dimensions) = FindDestinations(images);
